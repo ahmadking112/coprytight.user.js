@@ -1,0 +1,65 @@
+function copyright() {
+
+}
+
+copyright.prototype = {
+
+};
+// ==UserScript==
+// @name         YouTube Reaction Checker
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Checks if reacting to a YouTube video is allowed under copyright rules.
+// @author       Your Name
+// @match        https://www.youtube.com/watch?v=*
+// @grant        GM_xmlhttpRequest
+// @connect      yourcopyrightapi.com
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Extract video ID from URL
+    const videoId = new URLSearchParams(window.location.search).get("v");
+
+    if (videoId) {
+        // Make an API call to check copyright status
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: `https://yourcopyrightapi.com/check?videoId=${videoId}`,
+            onload: function(response) {
+                const data = JSON.parse(response.responseText);
+                displayStatus(data.isAllowed);
+            },
+            onerror: function() {
+                console.error("Failed to fetch copyright status");
+                displayStatus(null, true);
+            }
+        });
+    }
+
+    // Display the status on the page
+    function displayStatus(isAllowed, error = false) {
+        const statusDiv = document.createElement("div");
+        statusDiv.style.position = "absolute";
+        statusDiv.style.top = "10px";
+        statusDiv.style.right = "10px";
+        statusDiv.style.padding = "10px";
+        statusDiv.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+        statusDiv.style.color = "white";
+        statusDiv.style.zIndex = "1000";
+        statusDiv.style.borderRadius = "5px";
+        statusDiv.style.fontFamily = "Arial, sans-serif";
+        statusDiv.textContent = error
+            ? "Error: Unable to determine copyright status"
+        : isAllowed
+            ? "Reaction Allowed"
+        : "Risk of Copyright";
+
+        document.body.appendChild(statusDiv);
+
+        setTimeout(() => {
+            statusDiv.remove();
+        }, 5000);
+    }
+})(); 
